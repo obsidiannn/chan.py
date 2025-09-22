@@ -6,6 +6,7 @@ class DATA_SRC(Enum):
     BAO_STOCK = auto()
     CCXT = auto()
     CSV = auto()
+    HIKYUU_MYSQL = auto()
 
 
 class KL_TYPE(Enum):
@@ -126,4 +127,5 @@ class DATA_FIELD:
     FIELD_TURNRATE = "turnover_rate"  # 换手率
 
 
-TRADE_INFO_LST = [DATA_FIELD.FIELD_VOLUME, DATA_FIELD.FIELD_TURNOVER, DATA_FIELD.FIELD_TURNRATE]
+TRADE_INFO_LST = [DATA_FIELD.FIELD_VOLUME,
+                  DATA_FIELD.FIELD_TURNOVER, DATA_FIELD.FIELD_TURNRATE]
