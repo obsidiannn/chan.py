@@ -10,8 +10,8 @@ def query_kline(code, db_name, start, end):
     try:
         res_rows = models.session.execute(
             text(sql), {"start": start, "end": end}).fetchall()
-        result = [dict(zip(result.keys(), result)) for result in res_rows]
-        return result
+        data = [dict(zip(result._fields, result)) for result in res_rows]
+        return data
     except Exception as e:
         pass
     return []
@@ -21,9 +21,9 @@ def query_all_stocks():
     sql = 'select code,name  from hku_base '
     sql += 'where market_id in (1,2) and type = 1 and valid = 1'
     try:
-        resultproxy = models.session.execute(
-            text(sql), {})
-        return resultproxy.fetchall()
+        res_rows = models.session.execute(
+            text(sql), {}).fetchall()
+        return [dict(zip(result._fields, result)) for result in res_rows]
     except:
         pass
     return []
