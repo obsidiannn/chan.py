@@ -71,13 +71,6 @@ class CHikyuuDatasource(CCommonStockApi):
             code, k_type, begin_date, end_date, autype)
 
     def get_kl_data(self):
-        # 天级别以上才有详细交易信息
-        # if kltype_lt_day(self.k_type):
-        #     if not self.is_stock:
-        #         raise Exception("没有获取到数据，注意指数是没有分钟级别数据的！")
-        #     fields = "time,open,high,low,close"
-        # else:
-        #     fields = "date,open,high,low,close,volume,amount,turn"
         format_str = "%Y-%m-%d"
         dbname, code = self.find_dbname()
         start = datetime.datetime.strptime(
