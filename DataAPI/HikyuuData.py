@@ -7,11 +7,29 @@ from KLine.KLine_Unit import CKLine_Unit
 from Orm import kline_repository
 import datetime
 
+'''
+ FIELD_TIME = "time_key"
+    FIELD_OPEN = "open"
+    FIELD_HIGH = "high"
+    FIELD_LOW = "low"
+    FIELD_CLOSE = "close"
+    FIELD_VOLUME = "volume"  # 成交量
+    FIELD_TURNOVER = "turnover"  # 成交额
+    FIELD_TURNRATE = "turnover_rate"  # 换手率
+    '''
 
-def create_item_dict(data, column_name):
-    for i in range(len(data)):
-        data[i] = parse_time_column(data[i]) if i == 0 else str2float(data[i])
-    return dict(zip(column_name, data))
+
+def create_item_dict(data):
+    item = {
+        DATA_FIELD.FIELD_TIME: parse_time_column(str(data['date'])),
+        DATA_FIELD.FIELD_OPEN: str2float(data['open']),
+        DATA_FIELD.FIELD_HIGH: str2float(data['high']),
+        DATA_FIELD.FIELD_LOW: str2float(data['low']),
+        DATA_FIELD.FIELD_CLOSE: str2float(data['close']),
+        DATA_FIELD.FIELD_VOLUME: str2float(data['count']),
+        DATA_FIELD.FIELD_TURNOVER: str2float(data['amount']),
+    }
+    return item
 
 
 def parse_time_column(inp):
@@ -22,6 +40,12 @@ def parse_time_column(inp):
         month = int(inp[5:7])
         day = int(inp[8:10])
         hour = minute = 0
+    elif len(inp) == 12:
+        year = int(inp[:4])
+        month = int(inp[4:6])
+        day = int(inp[6:8])
+        hour = int(inp[8:10])
+        minute = int(inp[10:12])
     elif len(inp) == 17:
         year = int(inp[:4])
         month = int(inp[4:6])
@@ -37,21 +61,6 @@ def parse_time_column(inp):
     else:
         raise Exception(f"unknown time column from baostock:{inp}")
     return CTime(year, month, day, hour, minute)
-
-
-def GetColumnNameFromFieldList(fileds: str):
-    _dict = {
-        "time": DATA_FIELD.FIELD_TIME,
-        "date": DATA_FIELD.FIELD_TIME,
-        "open": DATA_FIELD.FIELD_OPEN,
-        "high": DATA_FIELD.FIELD_HIGH,
-        "low": DATA_FIELD.FIELD_LOW,
-        "close": DATA_FIELD.FIELD_CLOSE,
-        "volume": DATA_FIELD.FIELD_VOLUME,
-        "amount": DATA_FIELD.FIELD_TURNOVER,
-        "turn": DATA_FIELD.FIELD_TURNRATE,
-    }
-    return [_dict[x] for x in fileds.split(",")]
 
 
 class CHikyuuDatasource(CCommonStockApi):
@@ -82,9 +91,10 @@ class CHikyuuDatasource(CCommonStockApi):
         result = []
 
         for i, v in enumerate(ks):
-            pass
-            # yield CKLine_Unit(create_item_dict(rs.get_row_data(), GetColumnNameFromFieldList(fields)))
-        yield CKLine_Unit()
+            result.append(CKLine_Unit(create_item_dict(v)))
+
+        return result
+        # yield CKLine_Unit()
         # return result
         # if rs.error_code != '0':
         #     raise Exception(rs.error_msg)
