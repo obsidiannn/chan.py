@@ -1,17 +1,11 @@
 from . import strategy_enum, base_struct
 import datetime
-from Orm import kline_repository
+from Orm import models, kline_repository, strategy_record_repository
+
 
 class BaseStrategy():
-    # basic strategy class ,cannot directlly use , must implement by children strategy class
-    '''
-        因子负责提供相关的指标，数据
-        具体的演算过程需要在子策略完成
-        相当于子策略包含算子
-    '''
     start = 0
     end = 0
-    # 是否可回测 根据k线最新数据是否为最后数据确定
     predict = False
     date_label = None
 
@@ -40,20 +34,13 @@ class BaseStrategy():
         if len(result.strategy_records) > 0:
             strategy_record_repository.insert_many(
                 self.get_date_label(), result.strategy_records, self.strategy_enum().code)
-        if len(result.factor_result) > 0:
-            factor_result_repository.insert_many(
-                result.factor_result, self.get_date_label())
-        if len(result.strategy_record_properties) > 0:
-            record_property_repository.insert_many(
-                result.strategy_record_properties, self.get_date_label())
 
 
-class BaseDaytimeStrategyV2(BaseStrategy):
+class BaseDailyStrategy(BaseStrategy):
 
-    def __init__(self, sm, start, end, log_instance=None):
+    def __init__(self, start, end):
         self.start = start
         self.end = end
-        self.total_amount = 0
         self.strategy_context = self.init_strategy_context()
 
     def get_future_end(self, need_future=True):
@@ -63,7 +50,8 @@ class BaseDaytimeStrategyV2(BaseStrategy):
             self.start, format_str).strftime("%Y%m%d0000")
         end = datetime.datetime.strptime(
             self.end, format_str).strftime("%Y%m%d0000")
-        return start, end
+        # return start, end
+        return self.start, self.end
 
     def init_strategy_context(self) -> base_struct.StrategyContext:
         a, b = self.get_future_end()
@@ -78,15 +66,6 @@ class BaseDaytimeStrategyV2(BaseStrategy):
         total_reason = []
         total_point = 0
 
-        factor_results: list[models.FactorResult] = []
-        record_properties: list[k_structs.RecordPropery] = []
-        for f in factors_results:
-            total_point += f.point
-            factor_results.append(f.to_factor_result())
-            total_reason.extend(f.reason)
-            if len(f.properties) > 0:
-                record_properties.extend(f.properties)
-
         entity = models.StrategyRecord(
             market_code=s.market,
             stock_code=s.code,
@@ -95,15 +74,13 @@ class BaseDaytimeStrategyV2(BaseStrategy):
             strategy_date=self.get_date_label(),
             industry_label=industry,
             is_retest=self.predict,
-            concept_label=','.join(concepts),
+            concept_label='',
             total_point=total_point,
             data_index=data_index,
             total_reason=','.join(total_reason)
         )
-        strategy_record_property = base_struct.convert_record_property(
-            data_index, record_properties)
 
-        return entity, factor_results, [strategy_record_property]
+        return entity
 
     def strategy_calculate(self) -> base_struct.StrategyResult:
         records = []
@@ -111,26 +88,39 @@ class BaseDaytimeStrategyV2(BaseStrategy):
         record_properties = []
         stocks = kline_repository.query_all_stocks()
 
-        for s in self.sm:
+        for i in stocks:
+            s = self.get_stock(i)
+
+            # 不要双创板的
+            if s.code[:2] == '30' or s.code[:2] == '68':
+                continue
+            # 不玩st
+            if 'ST' in s.name:
+                continue
+
             # data_index = strategy_code + strategy_date + stock_code + market
             strategy_type = self.strategy_enum()
             data_index = '%s-%s-%s-%s' % (
                 strategy_type.code, self.get_date_label(), s.code, s.market
             )
-
-            choosed= self.stock_filter(s, factor_context)
+            choosed = self.stock_filter(s, self.strategy_context)
 
             if choosed is not None:
-                record, factor, properties = self.init_choosed_stock(
+                record = self.init_choosed_stock(
                     data_index,
                     s, choosed)
                 records.append(record)
 
-                if len(factor):
-                    factors.extend(factor)
-                if len(properties) > 0:
-                    record_properties.extend(properties)
-
         return base_struct.StrategyResult(records, factors, record_properties)
 
+    def get_stock(self, item) -> base_struct.Stock:
+        stock = base_struct.Stock()
+        stock.code = item['code']
+        stock.name = item['name']
 
+        if stock.code[:2] == '00':
+            stock.market = 'sz'
+        if stock.code[:2] == '60':
+            stock.market = 'sh'
+
+        return stock

@@ -6,6 +6,7 @@ from Orm import models
 class Stock():
     code: str
     name: str
+    market: str
 
 
 class StrategyResult():
