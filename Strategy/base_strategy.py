@@ -92,7 +92,6 @@ class BaseDailyStrategy(BaseStrategy):
 
         for i in stocks:
             s = self.get_stock(i)
-
             # 不要双创板的
             if s.code[:2] == '30' or s.code[:2] == '68':
                 continue

@@ -4,8 +4,10 @@ from Chan import CChan
 from ChanConfig import CChanConfig
 from Common.CEnum import BSP_TYPE
 from BuySellPoint import BS_Point
+from Plot.PlotDriver import CPlotDriver
 
 import datetime
+from pathlib import Path
 
 
 class ChanStrategy(base_strategy.BaseDailyStrategy):
@@ -82,8 +84,6 @@ class ChanStrategy(base_strategy.BaseDailyStrategy):
         datas = chan.kl_datas
         day_cklist = datas[KL_TYPE.K_DAY]
         if day_cklist and day_cklist.bs_point_lst:
-            b1: list[BS_Point.CBS_Point] = []
-            b2: list[BS_Point.CBS_Point] = []
 
             point = 0
             reasons = []
@@ -119,7 +119,7 @@ class ChanStrategy(base_strategy.BaseDailyStrategy):
                         reason = "类二买"
                         _point += 90
                         _reasons.append(reason)
-                    if vt == BSP_TYPE.T3A or vt == BSP_TYPE.T3B:
+                    if vt == BSP_TYPE.T3B:
                         reason = "三买"
                         _point += 50
                         _reasons.append(reason)
@@ -128,7 +128,22 @@ class ChanStrategy(base_strategy.BaseDailyStrategy):
                     point += _point
                     reasons.extend(_reasons)
 
-            if point > 0:
-                return base_struct.ChooseEntity(s, reasons, point)
+        if point > 0:
+            label_dir = self.get_date_label()
+            yyyymm = label_dir[:6]
+            folder_path = Path(f"./TempDir/{yyyymm}")
+
+            # 创建目录
+            folder_path.mkdir(parents=True, exist_ok=True)
+
+            file_path = folder_path / f"{label_dir}_{s.code}.png"
+            # if not file_path.exists():
+            #     plot_driver = CPlotDriver(
+            #         chan,
+            #         plot_config=plot_config,
+            #         plot_para=plot_para,
+            #     )
+            #     plot_driver.save2img(file_path)
+            return base_struct.ChooseEntity(s, reasons, point)
 
         return None
