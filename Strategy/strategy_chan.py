@@ -1,8 +1,11 @@
 from . import strategy_enum, base_struct, base_strategy
-from Orm import kline_repository
 from Common.CEnum import AUTYPE, DATA_SRC, KL_TYPE
 from Chan import CChan
 from ChanConfig import CChanConfig
+from Common.CEnum import BSP_TYPE
+from BuySellPoint import BS_Point
+
+import datetime
 
 
 class ChanStrategy(base_strategy.BaseDailyStrategy):
@@ -78,8 +81,54 @@ class ChanStrategy(base_strategy.BaseDailyStrategy):
         )
         datas = chan.kl_datas
         day_cklist = datas[KL_TYPE.K_DAY]
-        if day_cklist:
-            if day_cklist.bs_point_lst:
-                pass
-            pass
+        if day_cklist and day_cklist.bs_point_lst:
+            b1: list[BS_Point.CBS_Point] = []
+            b2: list[BS_Point.CBS_Point] = []
+
+            point = 0
+            reasons = []
+
+            format_str = "%Y-%m-%d"
+            end = datetime.datetime.strptime(
+                self.end, format_str
+            )
+
+            for _, v in enumerate(day_cklist.bs_point_lst.bsp1_list):
+                if not v.is_buy:
+                    continue
+                interval = end - v.klu.time.to_datetime()
+                if interval.days > 3:
+                    continue
+
+                _reasons: list[str] = []
+                _point = 0
+                for vt in v.type:
+                    if vt == BSP_TYPE.T1:
+                        reason = "一买"
+                        _point += 10
+                        _reasons.append(reason)
+                    if vt == BSP_TYPE.T2:
+                        reason = "二买"
+                        _point += 100
+                        _reasons.append(reason)
+                    if vt == BSP_TYPE.T1P:
+                        reason = "类一买"
+                        _point += 10
+                        _reasons.append(reason)
+                    if vt == BSP_TYPE.T2S:
+                        reason = "类二买"
+                        _point += 90
+                        _reasons.append(reason)
+                    if vt == BSP_TYPE.T3A or vt == BSP_TYPE.T3B:
+                        reason = "三买"
+                        _point += 50
+                        _reasons.append(reason)
+
+                if _point > 0:
+                    point += _point
+                    reasons.extend(_reasons)
+
+            if point > 0:
+                return base_struct.ChooseEntity(s, reasons, point)
+
         return None

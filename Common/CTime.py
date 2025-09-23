@@ -30,11 +30,19 @@ class CTime:
     def toDate(self):
         return CTime(self.year, self.month, self.day, 0, 0, auto=False)
 
+    def to_datetime(self):
+        if self.hour == 0 and self.minute == 0 and self.auto:
+            return datetime(self.year, self.month, self.day, 23, 59, self.second)
+        else:
+            return datetime(self.year, self.month, self.day, self.hour, self.minute, self.second)
+
     def set_timestamp(self):
         if self.hour == 0 and self.minute == 0 and self.auto:
-            date = datetime(self.year, self.month, self.day, 23, 59, self.second)
+            date = datetime(self.year, self.month,
+                            self.day, 23, 59, self.second)
         else:
-            date = datetime(self.year, self.month, self.day, self.hour, self.minute, self.second)
+            date = datetime(self.year, self.month, self.day,
+                            self.hour, self.minute, self.second)
         self.ts = date.timestamp()
 
     def __gt__(self, t2):

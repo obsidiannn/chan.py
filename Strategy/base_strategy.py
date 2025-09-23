@@ -18,7 +18,9 @@ class BaseStrategy():
         raise Exception('没有声明主筛选逻辑')
 
     def get_date_label(self):
-        return str(self.date_label)
+        date_label = datetime.datetime.strptime(
+            self.end, "%Y-%m-%d").strftime("%Y%m%d")
+        return date_label
 
     def strategy_calculate(self) -> base_struct.StrategyResult:
         # 遍历筛选器，内部调用stock_filter,返回 strategy_records, factor_result, strategy_record_property
@@ -60,12 +62,12 @@ class BaseDailyStrategy(BaseStrategy):
         context.end = b
         return context
 
-    def init_choosed_stock(self, data_index: str, s: base_struct.Stock):
+    def init_choosed_stock(self, data_index: str, choosed: base_struct.ChooseEntity):
         # 组装选中的stock 结果:
         industry = None
-        total_reason = []
-        total_point = 0
-
+        total_reason = choosed.stock_reason
+        total_point = choosed.point
+        s = choosed.stock
         entity = models.StrategyRecord(
             market_code=s.market,
             stock_code=s.code,
@@ -103,14 +105,16 @@ class BaseDailyStrategy(BaseStrategy):
             data_index = '%s-%s-%s-%s' % (
                 strategy_type.code, self.get_date_label(), s.code, s.market
             )
-            choosed = self.stock_filter(s, self.strategy_context)
+            try:
+                choosed = self.stock_filter(s, self.strategy_context)
 
-            if choosed is not None:
-                record = self.init_choosed_stock(
-                    data_index,
-                    s, choosed)
-                records.append(record)
-
+                if choosed is not None:
+                    record = self.init_choosed_stock(
+                        data_index,
+                        choosed)
+                    records.append(record)
+            except Exception as e:
+                pass
         return base_struct.StrategyResult(records, factors, record_properties)
 
     def get_stock(self, item) -> base_struct.Stock:

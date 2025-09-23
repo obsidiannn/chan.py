@@ -4,6 +4,7 @@ from Bi.Bi import CBi
 from ChanModel.Features import CFeatures
 from Common.CEnum import BSP_TYPE
 from Seg.Seg import CSeg
+from KLine.KLine_Unit import CKLine_Unit
 
 LINE_TYPE = TypeVar('LINE_TYPE', CBi, CSeg)
 
@@ -11,7 +12,7 @@ LINE_TYPE = TypeVar('LINE_TYPE', CBi, CSeg)
 class CBS_Point(Generic[LINE_TYPE]):
     def __init__(self, bi: LINE_TYPE, is_buy, bs_type: BSP_TYPE, relate_bsp1: Optional['CBS_Point'], feature_dict=None):
         self.bi: LINE_TYPE = bi
-        self.klu = bi.get_end_klu()
+        self.klu: CKLine_Unit = bi.get_end_klu()
         self.is_buy = is_buy
         self.type: List[BSP_TYPE] = [bs_type]
         self.relate_bsp1 = relate_bsp1

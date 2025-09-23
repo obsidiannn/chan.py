@@ -26,12 +26,14 @@ class StrategyResult():
 
 
 class ChooseEntity():
-    def __init__(self, stock, reasons):
+    def __init__(self, stock, reasons, point):
         self.stock_reason = reasons
         self.stock = stock
+        self.point = point
 
     stock: Stock
     stock_reason = []
+    point: int
 
 
 class StrategyContext():
