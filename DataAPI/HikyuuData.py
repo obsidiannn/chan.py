@@ -81,12 +81,10 @@ class CHikyuuDatasource(CCommonStockApi):
         # autype_dict = {AUTYPE.QFQ: "2", AUTYPE.HFQ: "1", AUTYPE.NONE: "3"}
         ks = kline_repository.query_kline(
             code, dbname, start, end)
-        result = []
 
         for i, v in enumerate(ks):
-            result.append(CKLine_Unit(create_item_dict(v)))
+            yield CKLine_Unit(create_item_dict(v))
 
-        return result
         # yield CKLine_Unit()
         # return result
         # if rs.error_code != '0':

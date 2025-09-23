@@ -4,13 +4,12 @@ from Common.CEnum import AUTYPE, DATA_SRC, KL_TYPE
 from Plot.AnimatePlotDriver import CAnimateDriver
 from Plot.PlotDriver import CPlotDriver
 
-
 if __name__ == "__main__":
-    code = "sz.000037"
-    begin_time = "2024-08-01"
-    end_time = "2025-08-01"
-    data_src = DATA_SRC.HIKYUU_MYSQL
-    lv_list = [KL_TYPE.K_WEEK, KL_TYPE.K_DAY]
+    code = "sz.000001"
+    begin_time = "2018-01-01"
+    end_time = None
+    data_src = DATA_SRC.BAO_STOCK
+    lv_list = [KL_TYPE.K_DAY]
 
     config = CChanConfig({
         "bi_strict": True,
@@ -34,7 +33,7 @@ if __name__ == "__main__":
         "plot_seg": True,
         "plot_eigen": False,
         "plot_zs": True,
-        "plot_macd": True,
+        "plot_macd": False,
         "plot_mean": False,
         "plot_channel": False,
         "plot_bsp": True,

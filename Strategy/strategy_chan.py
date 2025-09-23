@@ -5,7 +5,7 @@ from ChanConfig import CChanConfig
 from Common.CEnum import BSP_TYPE
 from BuySellPoint import BS_Point
 from Plot.PlotDriver import CPlotDriver
-
+from typing import Optional
 import datetime
 from pathlib import Path
 
@@ -43,7 +43,7 @@ class ChanStrategy(base_strategy.BaseDailyStrategy):
             "plot_seg": True,
             "plot_eigen": False,
             "plot_zs": True,
-            "plot_macd": False,
+            "plot_macd": True,
             "plot_mean": False,
             "plot_channel": False,
             "plot_bsp": True,
@@ -52,6 +52,8 @@ class ChanStrategy(base_strategy.BaseDailyStrategy):
             "plot_marker": False,
             "plot_rsi": False,
             "plot_kdj": False,
+            "plot_segzs": True,
+            "plot_segbsp": True
         }
 
         plot_para = {
@@ -103,7 +105,7 @@ class ChanStrategy(base_strategy.BaseDailyStrategy):
             # 创建目录
             folder_path.mkdir(parents=True, exist_ok=True)
 
-            file_path = folder_path / f"{label_dir}_{s.code}.png"
+            file_path = folder_path / label_dir / f"{s.name}_{s.code}.png"
             reason_label = ",".join(reasons)
             if not file_path.exists() and "二" in reason_label:
                 plot_driver = CPlotDriver(
@@ -164,3 +166,30 @@ class ChanStrategy(base_strategy.BaseDailyStrategy):
                     reasons.extend(_reasons)
                     return point, reasons
         return 0, []
+
+    # def try_open(self, chan: CChan, lv) -> Optional[CCustomBSP]:
+    #     data = chan[lv]
+    #     if lv != len(chan.lv_list)-1 and data.bi_list:  # 当前级别不是最低级别，且至少有一笔
+    #         if qjt_bsp := self.cal_qjt_bsp(data, chan[lv + 1]):  # 计算区间套
+    #             return qjt_bsp
+
+    # def cal_qjt_bsp(self, data: CKLine_List, sub_lv_data: CKLine_List) -> Optional[CCustomBSP]:
+    #     last_klu = data[-1][-1]
+    #     last_bsp_lst = data.bs_point_lst.getLastestBspList()
+    #     if len(last_bsp_lst) == 0:
+    #         return None
+    #     last_bsp = last_bsp_lst[0]
+    #     if last_bsp.klu.idx != last_klu.idx:  # 当前K线是父级别的买卖点
+    #         return None
+    #     for sub_bsp in sub_lv_data.cbsp_strategy:  # 对于次级别的买卖点
+    #         if sub_bsp.klu.sup_kl.idx == last_klu.idx and \  # 如果是父级别K线下的次级别K线
+    #         sub_bsp.type2str().find("1") >= 0:  # 且是一类买卖点
+    #         return CCustomBSP(
+    #                 bsp=last_bsp,
+    #                 klu=last_klu,
+    #                 bs_type=last_bsp.qjt_type(),  # 返回区间套买卖点
+    #                 is_buy=last_bsp.is_buy,
+    #                 target_klc=sub_bsp.target_klc[-1].sup_kl.klc,
+    #                 price=sub_bsp.open_price,
+    #             )
+    #     return None

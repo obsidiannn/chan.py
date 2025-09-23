@@ -206,7 +206,8 @@ class CChan:
         stockapi_cls = self.GetStockAPI()
         try:
             stockapi_cls.do_init()
-            for lv_idx, klu_iter in enumerate(self.init_lv_klu_iter(stockapi_cls)):
+            lv_klu_iter = self.init_lv_klu_iter(stockapi_cls)
+            for lv_idx, klu_iter in enumerate(lv_klu_iter):
                 self.add_lv_iter(lv_idx, klu_iter)
             self.klu_cache: List[Optional[CKLine_Unit]] = [
                 None for _ in self.lv_list]
