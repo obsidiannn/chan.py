@@ -81,10 +81,45 @@ class ChanStrategy(base_strategy.BaseDailyStrategy):
             config=config,
             autype=AUTYPE.QFQ,
         )
-        datas = chan.kl_datas
-        day_cklist = datas[KL_TYPE.K_DAY]
-        if day_cklist and day_cklist.bs_point_lst:
+        # week_chan = CChan(
+        #     code=s.market + "." + s.code,
+        #     begin_time=strategy_context.start,
+        #     end_time=strategy_context.end,
+        #     data_src=data_src,
+        #     lv_list=[KL_TYPE.K_WEEK],
+        #     config=config,
+        #     autype=AUTYPE.QFQ,
+        # )
 
+        point = 0
+        reasons = []
+        point, reasons = self.handle_chan_result(chan)
+        # w_point, w_reasons = self.handle_chan_result(week_chan)
+        if point > 0:
+            label_dir = self.get_date_label()
+            yyyymm = label_dir[:6]
+            folder_path = Path(f"./TempDir/{yyyymm}")
+
+            # 创建目录
+            folder_path.mkdir(parents=True, exist_ok=True)
+
+            file_path = folder_path / f"{label_dir}_{s.code}.png"
+            reason_label = ",".join(reasons)
+            if not file_path.exists() and "二" in reason_label:
+                plot_driver = CPlotDriver(
+                    chan,
+                    plot_config=plot_config,
+                    plot_para=plot_para,
+                )
+                plot_driver.save2img(file_path)
+            return base_struct.ChooseEntity(s, reasons, point)
+
+        return None
+
+    def handle_chan_result(self, chan: CChan):
+        datas = chan.kl_datas
+        day_cklist = datas[chan.lv_list[0]]
+        if day_cklist and day_cklist.bs_point_lst:
             point = 0
             reasons = []
 
@@ -127,23 +162,5 @@ class ChanStrategy(base_strategy.BaseDailyStrategy):
                 if _point > 0:
                     point += _point
                     reasons.extend(_reasons)
-
-        if point > 0:
-            label_dir = self.get_date_label()
-            yyyymm = label_dir[:6]
-            folder_path = Path(f"./TempDir/{yyyymm}")
-
-            # 创建目录
-            folder_path.mkdir(parents=True, exist_ok=True)
-
-            file_path = folder_path / f"{label_dir}_{s.code}.png"
-            # if not file_path.exists():
-            #     plot_driver = CPlotDriver(
-            #         chan,
-            #         plot_config=plot_config,
-            #         plot_para=plot_para,
-            #     )
-            #     plot_driver.save2img(file_path)
-            return base_struct.ChooseEntity(s, reasons, point)
-
-        return None
+                    return point, reasons
+        return 0, []
